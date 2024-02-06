@@ -22,12 +22,14 @@ normalize_var() {
 
 VERBOSE=$(normalize_var "$VERBOSE")
 DRY_RUN=$(normalize_var "$DRY_RUN")
+#REMAINING_REPORT=$(normalize_var "REMAINING_REPORT")
+REMAINING_REPORT=1
 
 start_timestamp=$(date --utc +%s)
 
 usage() {
   echo "Usage:"
-  echo $(basename "$0")
+  echo "$(basename "$0")"
   echo
   echo "Delete older files from these directories: "
   echo " - $DIR_APP: files where the last modified time is more than $MTIME_APP days ago."
@@ -44,16 +46,16 @@ elapsed_time() {
 
 print_debug() {
   if [[ $VERBOSE -ne 0 ]] ; then
-    echo "# $(current_timestamp) - DEBUG: $1"
+    echo "# $(current_timestamp) - DEBUG - $1"
   fi
 }
 
 print_info() {
-  echo "# $(current_timestamp) - INFO: $1"
+  echo "# $(current_timestamp) - INFO - $1"
 }
 
 print_error() {
-  echo "# $(current_timestamp) - ERROR: $1"
+  echo "# $(current_timestamp) - ERROR - $1"
 }
 
 delete_old_files() {
@@ -92,6 +94,13 @@ delete_old_files() {
   fi
 }
 
+report_files() {
+  ## The first argument is the target_dir
+  target_dir=$1
+  print_debug "target_dir=$target_dir"
+  find "$target_dir" -maxdepth 1 -type f -printf "%s\t%TF\t%p\n" | sort --key=2
+}
+
 ## Start
 print_info "Start."
 
@@ -102,6 +111,7 @@ fi
 
 print_debug "VERBOSE=$VERBOSE"
 print_debug "DRY_RUN=$DRY_RUN"
+print_debug "REMAINING_REPORT=$REMAINING_REPORT"
 
 if [[ $DRY_RUN -ne 0 ]] ; then
     # Dry-run: fake-delete:
@@ -130,5 +140,19 @@ delete_old_files $DIR_INI $MTIME_INI
 
 print_info "The df report for $DIR_INI after delete:"
 df -h $DIR_INI
+
+if [[ $REMAINING_REPORT -ne 0 ]] ; then
+  echo
+  print_info "Final reports"
+  print_info "Files remained in $DIR_APP:"
+  printf "Size\tLastModified\tPath\n"
+  report_files $DIR_APP
+
+  echo
+  print_info "Files remained in $DIR_INI:"
+  printf "Size\tLastModified\tPath\n"
+  report_files $DIR_INI
+  echo
+fi
 
 print_info "End. Total elapsed time: $(elapsed_time)"

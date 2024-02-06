@@ -18,11 +18,18 @@ else
 fi
 
 # Generate test files
-for Y in $(seq -w 2018 2024); do
+for Y in $(seq -w 2022 2023); do
   for M in $(seq -w 1 12); do
     for D in $(seq -w 1 28); do
       touch -m --date "$Y-$M-$D" "$target_dir/tmp_$Y-$M-$D.tmp";
     done
+  done
+done
+
+Y=2024
+for M in $(seq -w 1 2); do
+  for D in $(seq -w 1 28); do
+    touch -m --date "$Y-$M-$D" "$target_dir/tmp_$Y-$M-$D.tmp";
   done
 done
 
